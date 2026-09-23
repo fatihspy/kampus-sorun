@@ -20,6 +20,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Rapor fotoğrafları artık Cloudinary'nin tam (https://...) adresiyle geliyor;
+// eski/olası göreli yollar için geriye dönük uyumluluk sağlar.
+function resolveImageUrl(path) {
+  if (!path) return '';
+  return path.startsWith('http') ? path : window.location.origin + path;
+}
+
 async function apiFetch(path, options = {}) {
   const res = await fetch(API_BASE + path, {
     ...options,
@@ -144,7 +151,7 @@ function renderReports() {
     const card = document.createElement('div');
     card.className = 'report-card';
     card.innerHTML = `
-      <img src="${window.location.origin}${report.photoUrl}" alt="${report.category}" />
+      <img src="${resolveImageUrl(report.photoUrl)}" alt="${report.category}" />
       <div class="card-body">
         <div class="card-top">
           <span class="category">${CATEGORY_LABELS[report.category] || report.category}</span>
@@ -183,7 +190,7 @@ function renderMap() {
     const popupEl = document.createElement('div');
     popupEl.className = 'map-popup';
     popupEl.innerHTML = `
-      <img src="${window.location.origin}${report.photoUrl}" alt="${report.category}" />
+      <img src="${resolveImageUrl(report.photoUrl)}" alt="${report.category}" />
       <div class="map-popup-title">${CATEGORY_LABELS[report.category] || report.category}</div>
       <span class="status-pill status-${report.status}">${STATUS_LABELS[report.status]}</span>
       <button>Detayı Gör</button>
@@ -267,7 +274,7 @@ async function openModal(report) {
   activeReportId = report._id;
   activeReport = report;
 
-  document.getElementById('modalPhoto').src = window.location.origin + report.photoUrl;
+  document.getElementById('modalPhoto').src = resolveImageUrl(report.photoUrl);
   document.getElementById('modalCategory').textContent = CATEGORY_LABELS[report.category] || report.category;
   document.getElementById('modalVoteCount').textContent = `👍 ${report.upvotes?.length ?? report.upvoteCount ?? 0} onay`;
   document.getElementById('modalDesc').textContent = report.description || 'Açıklama girilmemiş.';
@@ -304,7 +311,7 @@ function renderResolveSection(report) {
 
     const img = document.getElementById('resolvedPhotoImg');
     if (report.resolvedPhotoUrl) {
-      img.src = window.location.origin + report.resolvedPhotoUrl;
+      img.src = resolveImageUrl(report.resolvedPhotoUrl);
       img.classList.remove('hidden');
     } else {
       img.classList.add('hidden');

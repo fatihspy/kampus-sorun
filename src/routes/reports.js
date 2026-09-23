@@ -34,7 +34,7 @@ router.post('/', auth, upload.single('photo'), async (req, res) => {
     const report = await Report.create({
       reporter: req.user.id,
       isAnonymous: isAnonymous === 'true' || isAnonymous === true,
-      photoUrl: `/uploads/${req.file.filename}`,
+      photoUrl: req.file.path, // Cloudinary'nin tam (https://...) adresi
       description,
       category,
       location: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
@@ -193,7 +193,7 @@ router.post('/:id/resolve-photo', auth, requireRole('personel', 'yonetici'), upl
 
     const report = await Report.findByIdAndUpdate(
       req.params.id,
-      { resolvedPhotoUrl: `/uploads/${req.file.filename}`, status: 'cozuldu', resolvedAt: new Date() },
+      { resolvedPhotoUrl: req.file.path, status: 'cozuldu', resolvedAt: new Date() },
       { new: true, runValidators: true }
     );
     if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });

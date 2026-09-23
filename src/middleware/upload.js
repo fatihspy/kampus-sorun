@@ -1,13 +1,15 @@
 const multer = require('multer');
-const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', '..', 'uploads'));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// Dosyalar artık Render'ın diskine değil, doğrudan Cloudinary'ye yükleniyor.
+// Böylece sunucu her yeniden başladığında (her deploy'da olduğu gibi) fotoğraflar kaybolmuyor.
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'kampus-sorun',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1600, height: 1600, crop: 'limit' }] // aşırı büyük dosyaları küçült
   }
 });
 
