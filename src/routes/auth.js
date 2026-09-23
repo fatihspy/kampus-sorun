@@ -43,6 +43,7 @@ router.post('/login', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
+    console.log(`[forgot-password] istek alındı: ${email}`);
     const user = await User.findOne({ email });
 
     // Kayıtlı olmayan e-postalarda da aynı mesajı dön (hesap taramasını önler)
@@ -59,6 +60,7 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({ message: 'Bu e-posta kayıtlıysa, sıfırlama kodu gönderildi.' });
   } catch (err) {
+    console.error('[forgot-password] hata:', err.message);
     res.status(500).json({ error: 'Kod gönderilemedi: ' + err.message });
   }
 });
