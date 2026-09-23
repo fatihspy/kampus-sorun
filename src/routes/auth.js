@@ -18,6 +18,9 @@ router.post('/register', async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapmayı dene.' });
+    }
     res.status(400).json({ error: err.message });
   }
 });
