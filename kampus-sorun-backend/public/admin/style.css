@@ -1,0 +1,372 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f4f5f7;
+  color: #1a1a1a;
+}
+
+.hidden { display: none !important; }
+
+/* GİRİŞ EKRANI */
+#loginScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e3a8a, #1e40af);
+}
+
+.login-box {
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  width: 340px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.login-box h1 { font-size: 20px; margin-bottom: 4px; }
+.login-box .subtitle { color: #888; margin-bottom: 24px; font-size: 14px; }
+
+.login-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.login-box button, .filters button, .modal-content button {
+  width: 100%;
+  padding: 12px;
+  background: #1e3a8a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-box button:hover { background: #1e40af; }
+
+.error { color: #dc2626; font-size: 13px; margin-top: 10px; min-height: 16px; }
+.success { color: #16a34a; font-size: 13px; margin-top: 10px; }
+
+/* PANEL */
+header {
+  background: #fff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+header h1 { font-size: 18px; }
+.badge {
+  background: #1e3a8a;
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #555; }
+
+button.secondary {
+  width: auto;
+  background: #fff;
+  color: #1e3a8a;
+  border: 1px solid #1e3a8a;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.view-toggle { display: flex; background: #eef0f3; border-radius: 8px; padding: 3px; }
+.view-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
+}
+.view-btn.active { background: #fff; color: #1e3a8a; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+.map-container {
+  height: 70vh;
+  margin: 0 24px 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.map-popup { font-size: 13px; min-width: 160px; }
+.map-popup img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
+.map-popup .map-popup-title { font-weight: 700; text-transform: capitalize; margin-bottom: 2px; }
+.map-popup button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px;
+  font-size: 12px;
+  background: #1e3a8a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filters select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.filters button { width: auto; padding: 8px 14px; font-size: 13px; }
+.count { color: #888; font-size: 13px; margin-left: auto; }
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 0 24px 24px;
+}
+
+.report-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.report-card:hover { transform: translateY(-2px); }
+
+.report-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background: #eee;
+}
+
+.report-card .card-body { padding: 12px; }
+
+.report-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.report-card .category { font-weight: 600; text-transform: capitalize; font-size: 14px; }
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.status-yeni { background: #dc2626; }
+.status-inceleniyor { background: #d97706; }
+.status-cozuldu { background: #16a34a; }
+
+.report-card .desc { font-size: 13px; color: #666; margin-bottom: 6px; }
+.report-card .date { font-size: 11px; color: #aaa; }
+
+.empty { text-align: center; color: #999; padding: 60px 20px; }
+
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #fff;
+  width: auto;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  z-index: 2;
+}
+
+.modal-content img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  background: #eee;
+}
+
+.modal-info { padding: 20px; }
+.modal-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.modal-info h2 { text-transform: capitalize; }
+.vote-badge {
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.anon-badge {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+.modal-desc { color: #444; margin-bottom: 14px; }
+.modal-info .meta { font-size: 13px; color: #555; margin-bottom: 8px; }
+
+.resolve-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+.resolved-photo { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
+.resolved-note { color: #16a34a; font-size: 13px; font-weight: 600; }
+#resolvePhotoInput { width: 100%; margin-bottom: 8px; font-size: 13px; }
+.success-btn {
+  width: 100%;
+  padding: 10px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comments-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+#commentsList { margin-bottom: 10px; max-height: 180px; overflow-y: auto; }
+.comment-item {
+  background: #f8f9fb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 6px;
+}
+.comment-item .comment-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #1e3a8a;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.comment-item .comment-date { color: #aaa; font-weight: 400; }
+.comment-item .comment-body { font-size: 13px; color: #333; }
+.no-comments { color: #999; font-size: 13px; margin-bottom: 10px; }
+#newCommentText {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+button.full-width { width: 100%; }
+
+/* İSTATİSTİKLER */
+.stats-container {
+  padding: 0 24px 24px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.stat-card h3 { font-size: 14px; color: #888; margin-bottom: 12px; }
+.stat-big-number { font-size: 32px; font-weight: 800; color: #1e3a8a; }
+.stat-bar-row { margin-bottom: 10px; }
+.stat-bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: #444; }
+.stat-bar-track { background: #eef0f3; border-radius: 6px; height: 8px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 6px; background: #1e3a8a; }
+
+#statusSelect {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+/* DAR EKRANLAR (telefon taray\u0131c\u0131s\u0131) */
+@media (max-width: 480px) {
+  .login-box { width: 100%; max-width: 340px; padding: 28px 24px; }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  header h1 { font-size: 16px; }
+  .header-right { width: 100%; justify-content: space-between; }
+
+  .filters { padding: 12px 16px; gap: 8px; }
+  .view-toggle { width: 100%; justify-content: space-between; }
+  .view-btn { flex: 1; text-align: center; }
+  .filters select { flex: 1; min-width: 0; }
+  .count { margin-left: 0; width: 100%; text-align: right; }
+
+  .report-grid { padding: 0 16px 16px; grid-template-columns: 1fr; }
+  .map-container { margin: 0 16px 16px; height: 60vh; }
+  .stats-container { padding: 0 16px 16px; grid-template-columns: 1fr; }
+
+  .modal { padding: 0; align-items: flex-end; }
+  .modal-content { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 95vh; }
+}
