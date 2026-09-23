@@ -10,9 +10,9 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: {
       validator: function (v) {
-        return /^[^\s@]+@(ogr\.ege\.edu\.tr|ege\.edu\.tr)$/.test(v);
+        return /^[^\s@]+@(ogrenci\.ege\.edu\.tr|ege\.edu\.tr)$/.test(v);
       },
-      message: 'Sadece @ogr.ege.edu.tr veya @ege.edu.tr uzantılı e-posta adresleriyle kayıt olabilirsiniz.'
+      message: 'Sadece @ogrenci.ege.edu.tr veya @ege.edu.tr uzantılı e-posta adresleriyle kayıt olabilirsiniz.'
     }
   },
   password: { type: String, required: true, minlength: 6 },
@@ -20,7 +20,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['ogrenci', 'personel', 'yonetici'],
     default: 'ogrenci'
-  }
+  },
+  resetCodeHash: { type: String, select: false },
+  resetCodeExpires: { type: Date, select: false }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
