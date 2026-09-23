@@ -82,9 +82,11 @@ router.get('/feed', auth, async (req, res) => {
       .lean();
 
     reports = reports.map((r) => {
+      const upvotes = r.upvotes || [];
       const masked = maskAnonymous(r, req.user.id, req.user.role);
-      masked.upvoteCount = r.upvotes.length;
-      masked.hasUpvoted = r.upvotes.some((u) => u.toString() === req.user.id);
+      masked.upvoteCount = upvotes.length;
+      masked.hasUpvoted = upvotes.some((u) => u.toString() === req.user.id);
+      masked.comments = r.comments || [];
       return masked;
     });
 
@@ -148,15 +150,18 @@ router.get('/:id', auth, async (req, res) => {
 
     if (!isOwner && !isStaff) {
       // Kampüs akışından erişim: herkes görebilir ama anonimse gönderen gizlenir
+      const upvotes = report.upvotes || [];
       const masked = maskAnonymous(report, req.user.id, req.user.role);
-      masked.upvoteCount = report.upvotes.length;
-      masked.hasUpvoted = report.upvotes.some((u) => u.toString() === req.user.id);
+      masked.upvoteCount = upvotes.length;
+      masked.hasUpvoted = upvotes.some((u) => u.toString() === req.user.id);
+      masked.comments = report.comments || [];
       return res.json(masked);
     }
 
     const obj = report.toObject();
-    obj.upvoteCount = report.upvotes.length;
-    obj.hasUpvoted = report.upvotes.some((u) => u.toString() === req.user.id);
+    const upvotes = report.upvotes || [];
+    obj.upvoteCount = upvotes.length;
+    obj.hasUpvoted = upvotes.some((u) => u.toString() === req.user.id);
     res.json(obj);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -203,6 +208,7 @@ router.post('/:id/upvote', auth, async (req, res) => {
   try {
     const report = await Report.findById(req.params.id);
     if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });
+    if (!report.upvotes) report.upvotes = [];
 
     const alreadyVoted = report.upvotes.some((u) => u.toString() === req.user.id);
     if (alreadyVoted) {
@@ -226,6 +232,7 @@ router.post('/:id/comments', auth, async (req, res) => {
 
     const report = await Report.findById(req.params.id);
     if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });
+    if (!report.comments) report.comments = [];
 
     report.comments.push({ author: req.user.id, text: text.trim() });
     await report.save();
