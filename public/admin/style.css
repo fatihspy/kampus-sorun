@@ -26,6 +26,15 @@ body {
 }
 
 .login-box h1 { font-size: 20px; margin-bottom: 4px; }
+
+.login-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.login-logos img { width: 52px; height: 52px; object-fit: contain; }
 .login-box .subtitle { color: #888; margin-bottom: 24px; font-size: 14px; }
 
 .login-box input {
@@ -65,6 +74,8 @@ header {
 }
 
 header h1 { font-size: 18px; }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-logo { width: 34px; height: 34px; object-fit: contain; }
 .badge {
   background: #1e3a8a;
   color: #fff;

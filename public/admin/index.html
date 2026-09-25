@@ -12,6 +12,10 @@
   <!-- GİRİŞ EKRANI -->
   <div id="loginScreen" class="screen">
     <div class="login-box">
+      <div class="login-logos">
+        <img src="logos/ege-universitesi.png" alt="Ege Üniversitesi" />
+        <img src="logos/ege-myo.png" alt="Ege Meslek Yüksekokulu" />
+      </div>
       <h1>Kampüs Sorun Bildirim</h1>
       <p class="subtitle">Yönetim Paneli</p>
       <input id="loginEmail" type="email" placeholder="ornek@ege.edu.tr" autocomplete="username" />
@@ -24,7 +28,11 @@
   <!-- PANEL EKRANI -->
   <div id="panelScreen" class="screen hidden">
     <header>
-      <h1>Kampüs Sorun Bildirim <span class="badge">Yönetim</span></h1>
+      <div class="header-left">
+        <img class="header-logo" src="logos/ege-universitesi.png" alt="Ege Üniversitesi" />
+        <img class="header-logo" src="logos/ege-myo.png" alt="Ege Meslek Yüksekokulu" />
+        <h1>Kampüs Sorun Bildirim <span class="badge">Yönetim</span></h1>
+      </div>
       <div class="header-right">
         <span id="userName"></span>
         <button id="logoutBtn" class="secondary">Çıkış</button>
