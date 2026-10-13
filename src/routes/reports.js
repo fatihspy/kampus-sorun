@@ -54,6 +54,7 @@ router.get('/', auth, async (req, res) => {
     const filter = req.user.role === 'ogrenci' ? { reporter: req.user.id } : {};
     if (req.query.status) filter.status = req.query.status;
     if (req.query.category) filter.category = req.query.category;
+    filter.isHidden = { $ne: true };
 
     const reports = await Report.find(filter)
       .populate('reporter', 'name email')
@@ -69,7 +70,7 @@ router.get('/', auth, async (req, res) => {
 // Kampüs akışı: herkesin gördüğü, oy verilebilen ortak rapor listesi
 router.get('/feed', auth, async (req, res) => {
   try {
-    const filter = {};
+    const filter = { isHidden: { $ne: true } };
     if (req.query.status) filter.status = req.query.status;
     if (req.query.category) filter.category = req.query.category;
 
@@ -97,6 +98,50 @@ router.get('/feed', auth, async (req, res) => {
     }
 
     res.json(reports);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Gizlenen raporları listele (sadece personel/yönetici) — silinmiyor, sadece normal listeden/akıştan çıkarılıyor
+router.get('/hidden', auth, requireRole('personel', 'yonetici'), async (req, res) => {
+  try {
+    const reports = await Report.find({ isHidden: true })
+      .populate('reporter', 'name email')
+      .populate('assignedUnit', 'name category')
+      .sort({ hiddenAt: -1 });
+
+    res.json(reports);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Raporu gizle (silmek yerine) — sadece personel/yönetici
+router.patch('/:id/hide', auth, requireRole('personel', 'yonetici'), async (req, res) => {
+  try {
+    const report = await Report.findByIdAndUpdate(
+      req.params.id,
+      { isHidden: true, hiddenAt: new Date() },
+      { new: true }
+    );
+    if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });
+    res.json(report);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Gizlenmiş raporu geri getir — sadece personel/yönetici
+router.patch('/:id/unhide', auth, requireRole('personel', 'yonetici'), async (req, res) => {
+  try {
+    const report = await Report.findByIdAndUpdate(
+      req.params.id,
+      { isHidden: false, hiddenAt: null },
+      { new: true }
+    );
+    if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });
+    res.json(report);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

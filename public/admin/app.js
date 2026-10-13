@@ -7,6 +7,7 @@ let currentReports = [];
 let activeReportId = null;
 let activeReport = null;
 let currentView = 'list';
+let isHiddenView = false;
 let map = null;
 let markers = [];
 
@@ -112,6 +113,16 @@ async function loadReports() {
     render();
   } catch (err) {
     alert('Raporlar yüklenemedi: ' + err.message);
+  }
+}
+
+// Gizlenmiş raporları listele
+async function loadHiddenReports() {
+  try {
+    currentReports = await apiFetch('/reports/hidden');
+    render();
+  } catch (err) {
+    alert('Gizlenen raporlar yüklenemedi: ' + err.message);
   }
 }
 
@@ -293,8 +304,20 @@ async function openModal(report) {
 
   renderResolveSection(report);
   renderComments(report.comments || []);
+  renderHideButton(report);
 
   document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function renderHideButton(report) {
+  const btn = document.getElementById('hideToggleBtn');
+  if (report.isHidden) {
+    btn.textContent = '👁️ Gizlemeyi Kaldır';
+    btn.classList.add('unhide');
+  } else {
+    btn.textContent = '🙈 Bu Raporu Gizle';
+    btn.classList.remove('unhide');
+  }
 }
 
 function renderResolveSection(report) {
@@ -364,6 +387,26 @@ document.getElementById('closeModal').addEventListener('click', () => {
   activeReport = null;
 });
 
+document.getElementById('hideToggleBtn').addEventListener('click', async () => {
+  const isCurrentlyHidden = !!activeReport?.isHidden;
+  const endpoint = isCurrentlyHidden ? 'unhide' : 'hide';
+  const confirmMsg = isCurrentlyHidden
+    ? 'Bu raporun gizlemesi kaldırılsın mı? Tekrar öğrencilere ve kampüs akışına görünür olacak.'
+    : 'Bu rapor gizlensin mi? Silinmez, sadece öğrencilerden ve kampüs akışından gizlenir.';
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const updated = await apiFetch(`/reports/${activeReportId}/${endpoint}`, { method: 'PATCH' });
+    activeReport = { ...activeReport, ...updated };
+    renderHideButton(activeReport);
+    document.getElementById('detailModal').classList.add('hidden');
+    if (isHiddenView) loadHiddenReports();
+    else loadReports();
+  } catch (err) {
+    alert('İşlem başarısız: ' + err.message);
+  }
+});
+
 document.getElementById('updateStatusBtn').addEventListener('click', async () => {
   const newStatus = document.getElementById('statusSelect').value;
   try {
@@ -416,33 +459,38 @@ document.getElementById('addCommentBtn').addEventListener('click', async () => {
 });
 
 // --- Filtreler ---
-document.getElementById('statusFilter').addEventListener('change', loadReports);
-document.getElementById('categoryFilter').addEventListener('change', loadReports);
+document.getElementById('statusFilter').addEventListener('change', () => {
+  if (isHiddenView) return;
+  loadReports();
+});
+document.getElementById('categoryFilter').addEventListener('change', () => {
+  if (isHiddenView) return;
+  loadReports();
+});
 document.getElementById('refreshBtn').addEventListener('click', () => {
   if (currentView === 'stats') loadStats();
+  else if (isHiddenView) loadHiddenReports();
   else loadReports();
 });
 
 // --- Görünüm sekmeleri ---
 function setActiveViewButton(id) {
-  ['listViewBtn', 'mapViewBtn', 'statsViewBtn'].forEach((btnId) => {
+  ['listViewBtn', 'mapViewBtn', 'statsViewBtn', 'hiddenViewBtn'].forEach((btnId) => {
     document.getElementById(btnId).classList.toggle('active', btnId === id);
   });
 }
 
 document.getElementById('listViewBtn').addEventListener('click', () => {
   currentView = 'list';
+  isHiddenView = false;
   setActiveViewButton('listViewBtn');
   document.getElementById('statsContainer').classList.add('hidden');
-  try {
-    render();
-  } catch (err) {
-    alert('Görünüm değiştirilemedi: ' + err.message);
-  }
+  loadReports();
 });
 
 document.getElementById('mapViewBtn').addEventListener('click', () => {
   currentView = 'map';
+  isHiddenView = false;
   setActiveViewButton('mapViewBtn');
   document.getElementById('statsContainer').classList.add('hidden');
   try {
@@ -454,12 +502,21 @@ document.getElementById('mapViewBtn').addEventListener('click', () => {
 
 document.getElementById('statsViewBtn').addEventListener('click', () => {
   currentView = 'stats';
+  isHiddenView = false;
   setActiveViewButton('statsViewBtn');
   document.getElementById('reportGrid').classList.add('hidden');
   document.getElementById('emptyMessage').classList.add('hidden');
   document.getElementById('mapContainer').classList.add('hidden');
   document.getElementById('statsContainer').classList.remove('hidden');
   loadStats();
+});
+
+document.getElementById('hiddenViewBtn').addEventListener('click', () => {
+  currentView = 'list';
+  isHiddenView = true;
+  setActiveViewButton('hiddenViewBtn');
+  document.getElementById('statsContainer').classList.add('hidden');
+  loadHiddenReports();
 });
 
 // --- Başlangıç ---

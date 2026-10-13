@@ -44,6 +44,7 @@
         <button id="listViewBtn" class="view-btn active">📋 Liste</button>
         <button id="mapViewBtn" class="view-btn">🗺️ Harita</button>
         <button id="statsViewBtn" class="view-btn">📊 İstatistikler</button>
+        <button id="hiddenViewBtn" class="view-btn">🙈 Gizlenenler</button>
       </div>
       <select id="statusFilter">
         <option value="">Tüm Durumlar</option>
@@ -110,6 +111,11 @@
           <div id="commentsList"></div>
           <textarea id="newCommentText" placeholder="Öğrenciye görünecek bir not ekle..." rows="2"></textarea>
           <button id="addCommentBtn" class="secondary full-width">Yorum Ekle</button>
+        </div>
+
+        <div class="hide-section">
+          <button id="hideToggleBtn" class="secondary full-width">🙈 Bu Raporu Gizle</button>
+          <p class="hide-note">Gizlenen raporlar silinmez, sadece öğrencilere ve kampüs akışına görünmez olur. "Gizlenenler" sekmesinden istediğin zaman geri getirebilirsin.</p>
         </div>
       </div>
     </div>

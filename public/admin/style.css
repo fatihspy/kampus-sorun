@@ -296,6 +296,33 @@ button.secondary {
   padding-top: 16px;
   border-top: 1px solid #eee;
 }
+
+.hide-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+#hideToggleBtn {
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#hideToggleBtn.unhide {
+  color: #1e3a8a;
+  border-color: #93c5fd;
+}
+.hide-note {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+  line-height: 1.4;
+}
 #commentsList { margin-bottom: 10px; max-height: 180px; overflow-y: auto; }
 .comment-item {
   background: #f8f9fb;

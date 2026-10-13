@@ -29,7 +29,9 @@ const reportSchema = new mongoose.Schema({
   },
   resolvedAt: { type: Date },
   upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  comments: [commentSchema]
+  comments: [commentSchema],
+  isHidden: { type: Boolean, default: false }, // silmek yerine listelerden gizlemek için
+  hiddenAt: { type: Date }
 }, { timestamps: true });
 
 reportSchema.index({ location: '2dsphere' });
