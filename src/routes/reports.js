@@ -289,4 +289,22 @@ router.post('/:id/comments', auth, async (req, res) => {
   }
 });
 
+// Kendi raporunu sil (sadece raporu gönderen kişi)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.id);
+    if (!report) return res.status(404).json({ error: 'Rapor bulunamadı.' });
+
+    const isOwner = report.reporter.toString() === req.user.id;
+    if (!isOwner) {
+      return res.status(403).json({ error: 'Sadece kendi raporunu silebilirsin.' });
+    }
+
+    await report.deleteOne();
+    res.json({ message: 'Rapor silindi.' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;
