@@ -22,7 +22,15 @@ const userSchema = new mongoose.Schema({
     default: 'ogrenci'
   },
   resetCodeHash: { type: String, select: false },
-  resetCodeExpires: { type: Date, select: false }
+  resetCodeExpires: { type: Date, select: false },
+
+  // E-posta doğrulama. Bilerek default YOK: bu alanı olmayan eski hesaplar doğrulanmış sayılır,
+  // sadece emailVerified === false olanlar giriş yapamaz.
+  emailVerified: { type: Boolean },
+  verifyCodeHash: { type: String, select: false },
+  verifyCodeExpires: { type: Date, select: false },
+  verifyCodeSentAt: { type: Date },
+  verifyAttempts: { type: Number, default: 0 }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

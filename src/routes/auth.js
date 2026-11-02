@@ -1,21 +1,75 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/User');
-const { sendResetCodeEmail } = require('../utils/mailer');
+const { sendResetCodeEmail, sendVerificationEmail } = require('../utils/mailer');
 const router = express.Router();
 
+const VERIFY_TTL_MS = 15 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 60 * 1000;
+const MAX_VERIFY_ATTEMPTS = 5;
+
+const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
+
+function publicUser(user) {
+  return { id: user._id, name: user.name, email: user.email, role: user.role };
+}
+
+function signToken(user) {
+  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+}
+
+// Yeni bir doğrulama kodu üretip kullanıcı belgesine yazar (kaydetmez), düz kodu döndürür
+async function prepareVerificationCode(user) {
+  const code = String(crypto.randomInt(100000, 1000000));
+  user.verifyCodeHash = await bcrypt.hash(code, 10);
+  user.verifyCodeExpires = new Date(Date.now() + VERIFY_TTL_MS);
+  user.verifyCodeSentAt = new Date();
+  user.verifyAttempts = 0;
+  return code;
+}
+
+// Kayıt: hesabı "doğrulanmamış" olarak oluşturur ve e-postaya kod yollar. Token burada VERİLMEZ.
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = normalizeEmail(req.body.email);
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Ad, e-posta ve şifre zorunludur.' });
+    }
     const role = email.endsWith('@ege.edu.tr') ? 'personel' : 'ogrenci';
 
-    const user = await User.create({ name, email, password, role });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    let user = await User.findOne({ email });
+    if (user && user.emailVerified !== false) {
+      return res.status(400).json({ error: 'Bu e-posta adresiyle zaten bir hesap var. Giriş yapmayı dene.' });
+    }
+
+    const isNew = !user;
+    if (user) {
+      // Daha önce kayıt olup kodu girmemiş: bilgileri güncelle, yeni kod gönder
+      user.name = name;
+      user.password = password;
+      user.role = role;
+    } else {
+      user = new User({ name, email, password, role, emailVerified: false });
+    }
+
+    const code = await prepareVerificationCode(user);
+    await user.save(); // doğrulama hataları (alan adı, şifre uzunluğu vb.) burada fırlar
+
+    try {
+      await sendVerificationEmail(user.email, code);
+    } catch (mailErr) {
+      // Kod gidemediyse hesap boşa kilitli kalmasın
+      if (isNew) await User.deleteOne({ _id: user._id });
+      return res.status(502).json({ error: 'Doğrulama kodu e-postana gönderilemedi. Birazdan tekrar dene.' });
+    }
 
     res.status(201).json({
-      token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      message: 'E-postana 6 haneli bir doğrulama kodu gönderdik.',
+      email: user.email,
+      requiresVerification: true
     });
   } catch (err) {
     if (err.code === 11000) {
@@ -25,18 +79,84 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Kodu doğrular, hesabı aktifleştirir ve giriş yaptırır
+router.post('/verify-email', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code || '').trim();
+    if (!email || !code) {
+      return res.status(400).json({ error: 'E-posta ve kod zorunludur.' });
+    }
+
+    const user = await User.findOne({ email }).select('+verifyCodeHash +verifyCodeExpires');
+    if (!user) return res.status(400).json({ error: 'Geçersiz veya süresi dolmuş kod.' });
+    if (user.emailVerified !== false) {
+      return res.status(400).json({ error: 'Bu hesap zaten doğrulanmış. Giriş yapabilirsin.' });
+    }
+    if (!user.verifyCodeHash || !user.verifyCodeExpires || user.verifyCodeExpires < new Date()) {
+      return res.status(400).json({ error: 'Kodun süresi dolmuş, yeni kod iste.' });
+    }
+    if ((user.verifyAttempts || 0) >= MAX_VERIFY_ATTEMPTS) {
+      return res.status(400).json({ error: 'Çok fazla hatalı deneme. Yeni kod iste.' });
+    }
+
+    const isValid = await bcrypt.compare(code, user.verifyCodeHash);
+    if (!isValid) {
+      await User.updateOne({ _id: user._id }, { $inc: { verifyAttempts: 1 } });
+      return res.status(400).json({ error: 'Kod hatalı.' });
+    }
+
+    user.emailVerified = true;
+    user.verifyCodeHash = undefined;
+    user.verifyCodeExpires = undefined;
+    user.verifyAttempts = 0;
+    await user.save();
+
+    res.json({ token: signToken(user), user: publicUser(user) });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Doğrulama kodunu yeniden gönder (en fazla dakikada bir)
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const generic = { message: 'Bu e-posta doğrulama bekliyorsa yeni bir kod gönderildi.' };
+
+    const user = await User.findOne({ email });
+    if (!user || user.emailVerified !== false) return res.json(generic);
+
+    if (user.verifyCodeSentAt && Date.now() - user.verifyCodeSentAt.getTime() < RESEND_COOLDOWN_MS) {
+      return res.status(429).json({ error: 'Yeni kod için 1 dakika beklemen gerekiyor.' });
+    }
+
+    const code = await prepareVerificationCode(user);
+    await user.save();
+    await sendVerificationEmail(user.email, code);
+
+    res.json(generic);
+  } catch (err) {
+    res.status(500).json({ error: 'Kod gönderilemedi: ' + err.message });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { password } = req.body;
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: 'E-posta veya şifre hatalı.' });
     }
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({
-      token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
-    });
+    if (user.emailVerified === false) {
+      return res.status(403).json({
+        error: 'E-postanı henüz doğrulamadın. Sana doğrulama kodu gönderiyoruz.',
+        needsVerification: true,
+        email: user.email
+      });
+    }
+    res.json({ token: signToken(user), user: publicUser(user) });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
