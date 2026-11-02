@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik Politikası · Kampüs Sorun Bildirim</title>
+<style>
+  :root { --navy:#0e2c6b; --blue:#17409a; --ink:#1a2233; --muted:#444d60; --bg:#f6f7fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); line-height:1.65; }
+  .wrap { max-width:760px; margin:0 auto; padding:32px 20px 56px; }
+  a { color:var(--blue); }
+  h1 { color:var(--navy); margin:12px 0 4px; font-size:30px; }
+  h2 { color:var(--blue); margin:28px 0 6px; font-size:19px; }
+  p, li { color:var(--muted); margin:0 0 8px; }
+  .meta { color:#7a8296; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/">← Ana sayfa</a>
+  <h1>Gizlilik Politikası</h1>
+  <p class="meta">Son güncelleme: 2 Kasım 2026</p>
+
+  <p>Kampüs Sorun Bildirim, Ege Üniversitesi kampüsündeki sorunların bildirilmesi ve takibi için geliştirilmiş bir uygulamadır. Bu sayfa hangi verileri neden topladığımızı açıklar.</p>
+
+  <h2>Topladığımız veriler</h2>
+  <ul>
+    <li><strong>Hesap bilgileri:</strong> ad soyad, üniversite e-posta adresi ve şifre. Şifre yalnızca geri döndürülemez (hash'lenmiş) biçimde saklanır.</li>
+    <li><strong>Bildirim içeriği:</strong> bildirdiğin sorunun başlığı, açıklaması, kategorisi, fotoğrafı ve konumu.</li>
+    <li><strong>Çözüm kanıtı:</strong> ilgili birimin sorunu çözdüğünde yüklediği fotoğraf ve notlar.</li>
+  </ul>
+
+  <h2>Verileri nasıl kullanıyoruz</h2>
+  <ul>
+    <li>Bildirimini ilgili kampüs birimine yönlendirmek ve durumunu sana göstermek için.</li>
+    <li>Hesabını doğrulamak için: kayıt ve şifre sıfırlama sırasında e-postana 6 haneli bir kod gönderilir.</li>
+    <li>Hesap bilgilerin reklam amacıyla kullanılmaz ve üçüncü taraflara satılmaz veya paylaşılmaz.</li>
+  </ul>
+
+  <h2>E-posta gönderimi</h2>
+  <p>Doğrulama ve şifre sıfırlama kodları, uygulamanın kendi gönderici hesabı üzerinden Gmail API ile gönderilir. Uygulama yalnızca e-posta <em>göndermek</em> için izin kullanır; senin e-postalarını veya Google hesabını okumaz, hesabına erişmez.</p>
+
+  <h2>Verilerin saklanması</h2>
+  <p>Veriler MongoDB Atlas (Frankfurt) üzerinde, fotoğraflar Cloudinary üzerinde saklanır. Uygulama Render üzerinde barındırılır. Bu hizmet sağlayıcılar verileri yalnızca uygulamayı çalıştırmak için işler.</p>
+
+  <h2>Raporların görünürlüğü</h2>
+  <p>Bildirdiğin sorunlar kampüs akışında ve yönetici panelinde, bildiren kişinin adıyla birlikte görünebilir. Kendi bildirimlerini uygulama içinden silebilirsin.</p>
+
+  <h2>Hakların</h2>
+  <p>Hesabının ve verilerinin silinmesini veya verilerinin bir kopyasını istemek için bizimle iletişime geçebilirsin.</p>
+
+  <h2>İletişim</h2>
+  <p><a href="mailto:fatihspyy@gmail.com">fatihspyy@gmail.com</a></p>
+</div>
+</body>
+</html>

@@ -17,8 +17,14 @@ app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')))
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 
+const siteDir = path.join(__dirname, '..', 'public', 'site');
+
 app.get('/', (req, res) => {
-  res.send('Kampüs Sorun Bildirim API çalışıyor.');
+  res.sendFile(path.join(siteDir, 'index.html'));
+});
+
+app.get('/gizlilik', (req, res) => {
+  res.sendFile(path.join(siteDir, 'gizlilik.html'));
 });
 
 mongoose.connect(process.env.MONGO_URI)
