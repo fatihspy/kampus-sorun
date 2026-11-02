@@ -11,111 +11,153 @@
 
   <!-- GİRİŞ EKRANI -->
   <div id="loginScreen" class="screen">
-    <div class="login-box">
+    <section class="login-aside">
       <div class="login-logos">
         <img src="logos/ege-universitesi.png" alt="Ege Üniversitesi" />
         <img src="logos/ege-myo.png" alt="Ege Meslek Yüksekokulu" />
       </div>
-      <h1>Kampüs Sorun Bildirim</h1>
-      <p class="subtitle">Yönetim Paneli</p>
-      <input id="loginEmail" type="email" placeholder="ornek@ege.edu.tr" autocomplete="username" />
-      <input id="loginPassword" type="password" placeholder="Şifre" autocomplete="current-password" />
-      <button id="loginBtn">Giriş Yap</button>
-      <p id="loginError" class="error"></p>
-    </div>
+      <div>
+        <h2>Kampüsteki sorunlar tek ekranda.</h2>
+        <p>Gelen bildirimleri incele, ilgili birime yönlendir, çözümü fotoğrafla kapat.</p>
+      </div>
+      <small>Sadece personel ve yöneticiler giriş yapabilir.</small>
+    </section>
+
+    <section class="login-main">
+      <div class="login-box">
+        <h1>Yönetim paneli</h1>
+        <p class="subtitle">Kampüs Sorun Bildirim</p>
+        <label for="loginEmail">E-posta</label>
+        <input id="loginEmail" type="email" placeholder="ornek@ege.edu.tr" autocomplete="username" />
+        <label for="loginPassword">Şifre</label>
+        <input id="loginPassword" type="password" placeholder="Şifreni yaz" autocomplete="current-password" />
+        <button id="loginBtn">Giriş yap</button>
+        <p id="loginError" class="error"></p>
+      </div>
+    </section>
   </div>
 
   <!-- PANEL EKRANI -->
-  <div id="panelScreen" class="screen hidden">
-    <header>
-      <div class="header-left">
-        <img class="header-logo" src="logos/ege-universitesi.png" alt="Ege Üniversitesi" />
-        <img class="header-logo" src="logos/ege-myo.png" alt="Ege Meslek Yüksekokulu" />
-        <h1>Kampüs Sorun Bildirim <span class="badge">Yönetim</span></h1>
+  <div id="panelScreen" class="screen app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logos">
+          <img src="logos/ege-universitesi.png" alt="Ege Üniversitesi" />
+          <img src="logos/ege-myo.png" alt="Ege Meslek Yüksekokulu" />
+        </div>
+        <div>
+          <p class="brand-name">Kampüs Sorun Bildirim</p>
+          <p class="brand-sub">Yönetim paneli</p>
+        </div>
       </div>
-      <div class="header-right">
+
+      <nav class="view-toggle" aria-label="Görünümler">
+        <button id="listViewBtn" class="view-btn active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
+          Raporlar
+        </button>
+        <button id="mapViewBtn" class="view-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          Harita
+        </button>
+        <button id="statsViewBtn" class="view-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          İstatistikler
+        </button>
+        <button id="hiddenViewBtn" class="view-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.6 9.6 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3.3 3.9M6.6 7.6C4 9.3 2.5 12 2.5 12S6 18 12 18c1.4 0 2.7-.3 3.8-.8"/></svg>
+          Gizlenenler
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
         <span id="userName"></span>
         <button id="logoutBtn" class="secondary">Çıkış</button>
       </div>
-    </header>
+    </aside>
 
-    <div class="filters">
-      <div class="view-toggle">
-        <button id="listViewBtn" class="view-btn active">📋 Liste</button>
-        <button id="mapViewBtn" class="view-btn">🗺️ Harita</button>
-        <button id="statsViewBtn" class="view-btn">📊 İstatistikler</button>
-        <button id="hiddenViewBtn" class="view-btn">🙈 Gizlenenler</button>
+    <main class="main">
+      <div class="topbar">
+        <h2 id="viewTitle">Raporlar</h2>
+        <div class="filters">
+          <select id="statusFilter" aria-label="Duruma göre filtrele">
+            <option value="">Tüm durumlar</option>
+            <option value="yeni">Yeni</option>
+            <option value="inceleniyor">İnceleniyor</option>
+            <option value="cozuldu">Çözüldü</option>
+          </select>
+          <select id="categoryFilter" aria-label="Kategoriye göre filtrele">
+            <option value="">Tüm kategoriler</option>
+            <option value="temizlik">Temizlik</option>
+            <option value="teknik">Teknik/Bakım</option>
+            <option value="guvenlik">Güvenlik</option>
+            <option value="diger">Diğer</option>
+          </select>
+          <button id="refreshBtn" class="secondary">Yenile</button>
+          <span id="reportCount" class="count"></span>
+        </div>
       </div>
-      <select id="statusFilter">
-        <option value="">Tüm Durumlar</option>
-        <option value="yeni">Yeni</option>
-        <option value="inceleniyor">İnceleniyor</option>
-        <option value="cozuldu">Çözüldü</option>
-      </select>
-      <select id="categoryFilter">
-        <option value="">Tüm Kategoriler</option>
-        <option value="temizlik">Temizlik</option>
-        <option value="teknik">Teknik/Bakım</option>
-        <option value="guvenlik">Güvenlik</option>
-        <option value="diger">Diğer</option>
-      </select>
-      <button id="refreshBtn" class="secondary">Yenile</button>
-      <span id="reportCount" class="count"></span>
-    </div>
 
-    <div id="reportGrid" class="report-grid"></div>
-    <p id="emptyMessage" class="empty hidden">Bu filtrelere uyan rapor yok.</p>
-    <div id="mapContainer" class="map-container hidden"></div>
-    <div id="statsContainer" class="stats-container hidden"></div>
+      <div id="statusStrip" class="status-strip"></div>
+
+      <div id="reportGrid" class="report-grid"></div>
+      <p id="emptyMessage" class="empty hidden">Bu filtrelere uyan rapor yok.</p>
+      <div id="mapContainer" class="map-container hidden"></div>
+      <div id="statsContainer" class="stats-container hidden"></div>
+    </main>
   </div>
 
   <!-- DETAY MODAL -->
   <div id="detailModal" class="modal hidden">
     <div class="modal-content">
-      <button id="closeModal" class="close-btn">&times;</button>
+      <button id="closeModal" class="close-btn" aria-label="Kapat">&times;</button>
       <img id="modalPhoto" src="" alt="Rapor fotoğrafı" />
       <div class="modal-info">
         <div class="modal-top-row">
           <h2 id="modalCategory"></h2>
           <span id="modalVoteCount" class="vote-badge"></span>
         </div>
-        <p id="modalAnonymousBadge" class="anon-badge hidden">🔒 Anonim olarak gönderildi</p>
+        <p id="modalAnonymousBadge" class="anon-badge hidden">Anonim olarak gönderildi</p>
         <p id="modalDesc" class="modal-desc"></p>
-        <p class="meta"><strong>Bina:</strong> <span id="modalBuilding">-</span></p>
-        <p class="meta"><strong>Konum:</strong> <a id="modalMapLink" href="#" target="_blank">Haritada aç</a></p>
-        <p class="meta"><strong>Gönderen:</strong> <span id="modalReporter"></span></p>
-        <p class="meta"><strong>Tarih:</strong> <span id="modalDate"></span></p>
+        <p class="meta"><strong>Bina</strong> <span id="modalBuilding">-</span></p>
+        <p class="meta"><strong>Konum</strong> <a id="modalMapLink" href="#" target="_blank" rel="noopener">Haritada aç</a></p>
+        <p class="meta"><strong>Gönderen</strong> <span id="modalReporter"></span></p>
+        <p class="meta"><strong>Tarih</strong> <span id="modalDate"></span></p>
 
-        <label class="meta" for="statusSelect"><strong>Durum:</strong></label>
-        <select id="statusSelect">
-          <option value="yeni">Yeni</option>
-          <option value="inceleniyor">İnceleniyor</option>
-        </select>
-        <button id="updateStatusBtn">Durumu Güncelle</button>
-        <p id="updateMessage" class="success hidden">Güncellendi ✓</p>
+        <div class="status-block">
+          <label class="meta" for="statusSelect"><strong>Durum</strong></label>
+          <div class="status-row">
+            <select id="statusSelect">
+              <option value="yeni">Yeni</option>
+              <option value="inceleniyor">İnceleniyor</option>
+            </select>
+            <button id="updateStatusBtn">Durumu güncelle</button>
+          </div>
+          <p id="updateMessage" class="success hidden">Güncellendi</p>
+        </div>
 
         <div class="resolve-section">
-          <p class="meta"><strong>Çözüldü olarak işaretle:</strong></p>
+          <p class="meta"><strong>Çözüldü olarak işaretle</strong></p>
           <div id="resolvedPhotoView" class="hidden">
             <img id="resolvedPhotoImg" src="" alt="Çözüm fotoğrafı" class="resolved-photo" />
-            <p class="resolved-note">✓ Bu rapor çözüldü olarak işaretlendi.</p>
+            <p class="resolved-note">Bu rapor çözüldü olarak işaretlendi.</p>
           </div>
           <div id="resolveUploadView">
             <input type="file" id="resolvePhotoInput" accept="image/*" />
-            <button id="resolveBtn" class="success-btn">Fotoğraflı Çözüldü İşaretle</button>
+            <button id="resolveBtn" class="success-btn">Fotoğrafla çözüldü işaretle</button>
           </div>
         </div>
 
         <div class="comments-section">
-          <p class="meta"><strong>Yorumlar / Notlar:</strong></p>
+          <p class="meta"><strong>Yorumlar ve notlar</strong></p>
           <div id="commentsList"></div>
-          <textarea id="newCommentText" placeholder="Öğrenciye görünecek bir not ekle..." rows="2"></textarea>
-          <button id="addCommentBtn" class="secondary full-width">Yorum Ekle</button>
+          <textarea id="newCommentText" placeholder="Öğrenciye görünecek bir not yaz" rows="2"></textarea>
+          <button id="addCommentBtn" class="secondary full-width">Yorum ekle</button>
         </div>
 
         <div class="hide-section">
-          <button id="hideToggleBtn" class="secondary full-width">🙈 Bu Raporu Gizle</button>
-          <p class="hide-note">Gizlenen raporlar silinmez, sadece öğrencilere ve kampüs akışına görünmez olur. "Gizlenenler" sekmesinden istediğin zaman geri getirebilirsin.</p>
+          <button id="hideToggleBtn" class="secondary full-width">Bu raporu gizle</button>
+          <p class="hide-note">Gizlenen raporlar silinmez; öğrencilere ve kampüs akışına görünmez olur. "Gizlenenler" sekmesinden geri getirebilirsin.</p>
         </div>
       </div>
     </div>

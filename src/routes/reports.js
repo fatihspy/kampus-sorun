@@ -150,20 +150,23 @@ router.patch('/:id/unhide', auth, requireRole('personel', 'yonetici'), async (re
 // Yönetim istatistikleri (sadece personel/yönetici)
 router.get('/stats', auth, requireRole('personel', 'yonetici'), async (req, res) => {
   try {
+    const visible = { isHidden: { $ne: true } }; // gizlenen raporlar sayılara dahil değil
     const byCategory = await Report.aggregate([
+      { $match: visible },
       { $group: { _id: '$category', count: { $sum: 1 } } }
     ]);
     const byStatus = await Report.aggregate([
+      { $match: visible },
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
     const byBuilding = await Report.aggregate([
-      { $match: { building: { $nin: [null, ''] } } },
+      { $match: { ...visible, building: { $nin: [null, ''] } } },
       { $group: { _id: '$building', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 5 }
     ]);
 
-    const resolvedReports = await Report.find({ status: 'cozuldu', resolvedAt: { $ne: null } });
+    const resolvedReports = await Report.find({ ...visible, status: 'cozuldu', resolvedAt: { $ne: null } });
     let avgResolutionHours = null;
     if (resolvedReports.length > 0) {
       const totalHours = resolvedReports.reduce((sum, r) => {
@@ -172,7 +175,7 @@ router.get('/stats', auth, requireRole('personel', 'yonetici'), async (req, res)
       avgResolutionHours = Math.round((totalHours / resolvedReports.length) * 10) / 10;
     }
 
-    const total = await Report.countDocuments();
+    const total = await Report.countDocuments(visible);
 
     res.json({ total, byCategory, byStatus, byBuilding, avgResolutionHours });
   } catch (err) {

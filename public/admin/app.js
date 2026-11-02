@@ -93,6 +93,12 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 });
 
+['loginEmail', 'loginPassword'].forEach((id) => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+});
+
 document.getElementById('logoutBtn').addEventListener('click', () => {
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminUser');
@@ -111,9 +117,53 @@ async function loadReports() {
   try {
     currentReports = await apiFetch(`/reports?${params.toString()}`);
     render();
+    loadSummary();
   } catch (err) {
     alert('Raporlar yüklenemedi: ' + err.message);
   }
+}
+
+// --- Durum şeridi: toplam ve duruma göre sayılar, aynı zamanda hızlı filtre ---
+let summaryCounts = null;
+
+async function loadSummary() {
+  try {
+    const stats = await apiFetch('/reports/stats');
+    const byStatus = Object.fromEntries(stats.byStatus.map((s) => [s._id, s.count]));
+    summaryCounts = {
+      all: stats.total,
+      yeni: byStatus.yeni || 0,
+      inceleniyor: byStatus.inceleniyor || 0,
+      cozuldu: byStatus.cozuldu || 0
+    };
+    renderStrip();
+  } catch (err) {
+    console.log('Özet yüklenemedi:', err.message);
+  }
+}
+
+function renderStrip() {
+  const strip = document.getElementById('statusStrip');
+  if (!summaryCounts) return;
+  const active = document.getElementById('statusFilter').value;
+  const tiles = [
+    { key: '', cls: 'tile-all', label: 'Tüm raporlar', num: summaryCounts.all },
+    { key: 'yeni', cls: 'tile-yeni', label: 'Yeni', num: summaryCounts.yeni },
+    { key: 'inceleniyor', cls: 'tile-inceleniyor', label: 'İnceleniyor', num: summaryCounts.inceleniyor },
+    { key: 'cozuldu', cls: 'tile-cozuldu', label: 'Çözüldü', num: summaryCounts.cozuldu }
+  ];
+  strip.innerHTML = tiles.map((t) => `
+    <button class="strip-tile ${t.cls}${t.key === active ? ' active' : ''}" data-status="${t.key}">
+      <span class="num">${t.num}</span>
+      <span class="lbl">${t.label}</span>
+    </button>
+  `).join('');
+  strip.querySelectorAll('.strip-tile').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.getElementById('statusFilter').value = btn.dataset.status;
+      loadReports();
+    });
+  });
 }
 
 // Gizlenmiş raporları listele
@@ -134,6 +184,8 @@ function render() {
   const statsEl = document.getElementById('statsContainer');
 
   statsEl.classList.add('hidden');
+  document.getElementById('statusStrip').classList.toggle('hidden', isHiddenView);
+  renderStrip();
 
   if (currentView === 'map') {
     grid.classList.add('hidden');
@@ -159,20 +211,31 @@ function renderReports() {
   emptyMsg.classList.add('hidden');
 
   currentReports.forEach((report) => {
-    const card = document.createElement('div');
+    const card = document.createElement('article');
     card.className = 'report-card';
+    card.dataset.status = report.status;
+    card.tabIndex = 0;
     card.innerHTML = `
-      <img src="${resolveImageUrl(report.photoUrl)}" alt="${report.category}" />
+      <div class="card-media">
+        <img src="${resolveImageUrl(report.photoUrl)}" alt="${escapeHtml(CATEGORY_LABELS[report.category] || report.category)}" loading="lazy" />
+        <span class="status-pill status-${report.status}">${STATUS_LABELS[report.status]}</span>
+      </div>
       <div class="card-body">
         <div class="card-top">
           <span class="category">${CATEGORY_LABELS[report.category] || report.category}</span>
-          <span class="status-pill status-${report.status}">${STATUS_LABELS[report.status]}</span>
+          <span class="votes">${report.upvotes?.length ?? 0} onay</span>
         </div>
-        <div class="desc">${report.description ? escapeHtml(report.description).slice(0, 60) : 'Açıklama yok'}</div>
-        <div class="date">${new Date(report.createdAt).toLocaleString('tr-TR')} · 👍 ${report.upvotes?.length ?? 0}</div>
+        <p class="desc">${report.description ? escapeHtml(report.description) : 'Açıklama girilmemiş.'}</p>
+        <p class="date">${report.building ? escapeHtml(report.building) + ', ' : ''}${new Date(report.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
       </div>
     `;
     card.addEventListener('click', () => openModal(report));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openModal(report);
+      }
+    });
     grid.appendChild(card);
   });
 }
@@ -196,7 +259,14 @@ function renderMap() {
 
   currentReports.forEach((report) => {
     const [lng, lat] = report.location.coordinates;
-    const marker = L.marker([lat, lng]).addTo(map);
+    const icon = L.divIcon({
+      className: '',
+      html: `<span class="pin pin-${report.status}"></span>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+      popupAnchor: [0, -12]
+    });
+    const marker = L.marker([lat, lng], { icon }).addTo(map);
 
     const popupEl = document.createElement('div');
     popupEl.className = 'map-popup';
@@ -204,7 +274,7 @@ function renderMap() {
       <img src="${resolveImageUrl(report.photoUrl)}" alt="${report.category}" />
       <div class="map-popup-title">${CATEGORY_LABELS[report.category] || report.category}</div>
       <span class="status-pill status-${report.status}">${STATUS_LABELS[report.status]}</span>
-      <button>Detayı Gör</button>
+      <button>Detayı gör</button>
     `;
     popupEl.querySelector('button').addEventListener('click', () => openModal(report));
     marker.bindPopup(popupEl);
@@ -236,25 +306,22 @@ function renderStats(stats) {
 
   statsEl.innerHTML = `
     <div class="stat-card">
-      <h3>Toplam Rapor</h3>
+      <h3>Toplam rapor</h3>
       <div class="stat-big-number">${stats.total}</div>
     </div>
 
     <div class="stat-card">
-      <h3>Duruma Göre</h3>
-      <div class="stat-bar-row">
-        <div class="stat-bar-label"><span>🔴 Yeni</span><span>${statusMap.yeni || 0}</span></div>
-      </div>
-      <div class="stat-bar-row">
-        <div class="stat-bar-label"><span>🟠 İnceleniyor</span><span>${statusMap.inceleniyor || 0}</span></div>
-      </div>
-      <div class="stat-bar-row">
-        <div class="stat-bar-label"><span>🟢 Çözüldü</span><span>${statusMap.cozuldu || 0}</span></div>
-      </div>
+      <h3>Duruma göre</h3>
+      ${['yeni', 'inceleniyor', 'cozuldu'].map((s) => `
+        <div class="stat-bar-row">
+          <div class="stat-bar-label"><span>${STATUS_LABELS[s]}</span><span>${statusMap[s] || 0}</span></div>
+          <div class="stat-bar-track"><div class="stat-bar-fill fill-${s}" style="width:${((statusMap[s] || 0) / Math.max(1, stats.total)) * 100}%"></div></div>
+        </div>
+      `).join('')}
     </div>
 
     <div class="stat-card">
-      <h3>Kategoriye Göre</h3>
+      <h3>Kategoriye göre</h3>
       ${stats.byCategory.map((c) => `
         <div class="stat-bar-row">
           <div class="stat-bar-label"><span>${CATEGORY_LABELS[c._id] || c._id}</span><span>${c.count}</span></div>
@@ -264,7 +331,7 @@ function renderStats(stats) {
     </div>
 
     <div class="stat-card">
-      <h3>En Çok Rapor Alan Binalar</h3>
+      <h3>En çok rapor alan binalar</h3>
       ${stats.byBuilding.length > 0 ? stats.byBuilding.map((b) => `
         <div class="stat-bar-row">
           <div class="stat-bar-label"><span>${escapeHtml(b._id)}</span><span>${b.count}</span></div>
@@ -274,7 +341,7 @@ function renderStats(stats) {
     </div>
 
     <div class="stat-card">
-      <h3>Ortalama Çözüm Süresi</h3>
+      <h3>Ortalama çözüm süresi</h3>
       <div class="stat-big-number">${stats.avgResolutionHours !== null ? stats.avgResolutionHours + ' sa' : '-'}</div>
     </div>
   `;
@@ -287,7 +354,7 @@ async function openModal(report) {
 
   document.getElementById('modalPhoto').src = resolveImageUrl(report.photoUrl);
   document.getElementById('modalCategory').textContent = CATEGORY_LABELS[report.category] || report.category;
-  document.getElementById('modalVoteCount').textContent = `👍 ${report.upvotes?.length ?? report.upvoteCount ?? 0} onay`;
+  document.getElementById('modalVoteCount').textContent = `${report.upvotes?.length ?? report.upvoteCount ?? 0} onay`;
   document.getElementById('modalDesc').textContent = report.description || 'Açıklama girilmemiş.';
   document.getElementById('modalBuilding').textContent = report.building || '-';
   document.getElementById('modalReporter').textContent = report.reporter?.name
@@ -312,10 +379,10 @@ async function openModal(report) {
 function renderHideButton(report) {
   const btn = document.getElementById('hideToggleBtn');
   if (report.isHidden) {
-    btn.textContent = '👁️ Gizlemeyi Kaldır';
+    btn.textContent = 'Gizlemeyi kaldır';
     btn.classList.add('unhide');
   } else {
-    btn.textContent = '🙈 Bu Raporu Gizle';
+    btn.textContent = 'Bu raporu gizle';
     btn.classList.remove('unhide');
   }
 }
@@ -373,7 +440,7 @@ async function refreshActiveReport() {
   try {
     const fresh = await apiFetch(`/reports/${activeReportId}`);
     activeReport = fresh;
-    document.getElementById('modalVoteCount').textContent = `👍 ${fresh.upvotes?.length ?? 0} onay`;
+    document.getElementById('modalVoteCount').textContent = `${fresh.upvotes?.length ?? 0} onay`;
     renderResolveSection(fresh);
     renderComments(fresh.comments || []);
   } catch (err) {
@@ -474,10 +541,24 @@ document.getElementById('refreshBtn').addEventListener('click', () => {
 });
 
 // --- Görünüm sekmeleri ---
+const VIEW_TITLES = {
+  listViewBtn: 'Raporlar',
+  mapViewBtn: 'Harita',
+  statsViewBtn: 'İstatistikler',
+  hiddenViewBtn: 'Gizlenen raporlar'
+};
+
 function setActiveViewButton(id) {
   ['listViewBtn', 'mapViewBtn', 'statsViewBtn', 'hiddenViewBtn'].forEach((btnId) => {
     document.getElementById(btnId).classList.toggle('active', btnId === id);
   });
+  document.getElementById('viewTitle').textContent = VIEW_TITLES[id];
+
+  // Filtreler sadece Raporlar ve Harita görünümlerinde anlamlı
+  const filtersApply = id === 'listViewBtn' || id === 'mapViewBtn';
+  document.getElementById('statusFilter').classList.toggle('hidden', !filtersApply);
+  document.getElementById('categoryFilter').classList.toggle('hidden', !filtersApply);
+  document.getElementById('reportCount').classList.toggle('hidden', id === 'statsViewBtn');
 }
 
 document.getElementById('listViewBtn').addEventListener('click', () => {
@@ -493,11 +574,7 @@ document.getElementById('mapViewBtn').addEventListener('click', () => {
   isHiddenView = false;
   setActiveViewButton('mapViewBtn');
   document.getElementById('statsContainer').classList.add('hidden');
-  try {
-    render();
-  } catch (err) {
-    alert('Harita yüklenemedi: ' + err.message);
-  }
+  loadReports();
 });
 
 document.getElementById('statsViewBtn').addEventListener('click', () => {
@@ -507,6 +584,7 @@ document.getElementById('statsViewBtn').addEventListener('click', () => {
   document.getElementById('reportGrid').classList.add('hidden');
   document.getElementById('emptyMessage').classList.add('hidden');
   document.getElementById('mapContainer').classList.add('hidden');
+  document.getElementById('statusStrip').classList.add('hidden');
   document.getElementById('statsContainer').classList.remove('hidden');
   loadStats();
 });
